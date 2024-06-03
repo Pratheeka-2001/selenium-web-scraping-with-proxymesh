@@ -4,6 +4,18 @@ import selenium.webdriver.common.keys
 import random
 import config
 import time
+import pymongo
+from bson import ObjectId
+from datetime import datetime
+
+def handle_mongo(data):
+    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    print(client)
+    db = client["twitter"]
+    collection = db['trends']
+    collection.insert_one(data)
+    latest_data = collection.find_one(sort=[("scrape_end_time", -1)], limit=1)
+    return latest_data
 
 def rand_proxy():
     proxy = random.choice(config.ips)
@@ -11,7 +23,7 @@ def rand_proxy():
 
 def web_scrape():
     # chrome_options = webdriver.ChromeOptions()
-    # proxy = rand_proxy()
+    proxy = rand_proxy()
     # chrome_options.add_argument(f'--proxy-server={proxy}')
 
     BASE_URL = 'https://x.com/home'
@@ -47,12 +59,26 @@ def web_scrape():
     time.sleep(2)
     passwordNextBtn = browser.find_element(By.XPATH, '//button[@data-testid="LoginForm_Login_Button"]')
     passwordNextBtn.click()
-    time.sleep(5)
+    time.sleep(15)
     trending_topics = browser.find_elements(By.XPATH, '//div[@data-testid="trend"]//div[2]/span') 
-    for topics in trending_topics:
+    document = {}
+    for index, topics in enumerate(trending_topics):
         print(topics.text)
-    
-    time.sleep(250)
+        document["trend"+str(index+1)] = topics.text
+
+    datetimenow = datetime.now()
+    datetimenow = datetimenow.strftime("%Y-%m-%d %H:%M")
+    document["_id"] = ObjectId()
+    document["scrape_end_time"] = datetimenow
+    document["ip"] = proxy
+
+    print(document)
+    latestdata = handle_mongo(document)
+    print("latest")
+    print(latestdata)
+    time.sleep(150)
+    # browser.quit()
+    return latestdata
 
 if __name__ == '__main__':
     web_scrape()  
