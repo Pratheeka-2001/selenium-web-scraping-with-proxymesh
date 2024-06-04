@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 import selenium.webdriver.common.keys
 import random
 import config
@@ -23,45 +24,48 @@ def rand_proxy():
     return proxy
 
 def web_scrape():
-    # chrome_options = webdriver.ChromeOptions()
-    proxy = rand_proxy()
-    # chrome_options.add_argument(f'--proxy-server={proxy}')
-
+    options = webdriver.ChromeOptions()
+    proxy = rand_proxy() # Use paid proxies for better connection
+    options.add_argument(f'--proxy-server={proxy}')
+    options.page_load_strategy = 'normal'
     BASE_URL = 'https://x.com/home'
-    # path = 'chromedriver-win64\chromedriver.exe'
-    browser = webdriver.Chrome() 
+    browser = webdriver.Chrome(options=options) 
     browser.get(BASE_URL)
-    time.sleep(8)
 
     # Login task
-    loginBtn = browser.find_element(By.XPATH, '//a[@data-testid="loginButton"]')
-    loginBtn.click()
-    time.sleep(5)
-    nameField = browser.find_element(By.XPATH, '//input[@name="text"]')   
-    nameField.click()
-    nameField.clear()
-    nameField.send_keys('gimawe1858@avastu.com')
-    nextButtons = browser.find_elements(By.XPATH, '//button[@role="button"]')
-    time.sleep(3)
-    nextButtons[3].click()
-    time.sleep(3)
-    userName = browser.find_element(By.XPATH, '//input[@type="text"]')
-    userName.click()
-    userName.clear()
-    userName.send_keys('ScrapeYou')
-    time.sleep(1)
-    userNameNextBtn = browser.find_element(By.XPATH, '//button[@data-testid="ocfEnterTextNextButton"]')
-    userNameNextBtn.click()
-    time.sleep(3)
-    password = browser.find_element(By.XPATH, '//input[@type="password"]')
-    password.click()
-    password.clear()
-    password.send_keys('IWILLSCRAPEYOU')
-    time.sleep(2)
-    passwordNextBtn = browser.find_element(By.XPATH, '//button[@data-testid="LoginForm_Login_Button"]')
-    passwordNextBtn.click()
-    time.sleep(15)
-    trending_topics = browser.find_elements(By.XPATH, '//div[@data-testid="trend"]//div[2]/span') 
+    try:
+        popupCloseButton = WebDriverWait(browser, timeout=8).until(lambda d : d.find_element(By.XPATH, '//button[@data-testid="xMigrationBottomBar"]'))
+        popupCloseButton.click()
+        time.sleep(2)
+        loginBtn = WebDriverWait(browser, timeout=3).until(lambda d : d.find_element(By.XPATH, '//a[@data-testid="loginButton"]'))
+        loginBtn.click()
+        nameField = WebDriverWait(browser, timeout=5).until(lambda d : d.find_element(By.XPATH, '//input[@name="text"]')) 
+        nameField.click()
+        nameField.clear()
+        nameField.send_keys('gimawe1858@avastu.com')
+        nextButtons = browser.find_elements(By.XPATH, '//button[@role="button"]')
+        time.sleep(2)
+        nextButtons[3].click()
+        userName = WebDriverWait(browser, timeout=5).until(lambda d : d.find_element(By.XPATH, '//input[@type="text"]'))
+        userName.click()
+        userName.clear()
+        userName.send_keys('ScrapeYou')
+        time.sleep(1)
+        userNameNextBtn =WebDriverWait(browser, timeout=3).until(lambda d : d.find_element(By.XPATH, '//button[@data-testid="ocfEnterTextNextButton"]'))
+        userNameNextBtn.click()
+        time.sleep(3)
+        password = browser.find_element(By.XPATH, '//input[@type="password"]')
+        password.click()
+        password.clear()
+        password.send_keys('IWILLSCRAPEYOU')
+        time.sleep(2)
+        passwordNextBtn = browser.find_element(By.XPATH, '//button[@data-testid="LoginForm_Login_Button"]')
+        passwordNextBtn.click()
+        time.sleep(1)
+        trending_topics =WebDriverWait(browser, timeout=10).until(lambda d : d.find_elements(By.XPATH, '//div[@data-testid="trend"]//div[2]/span'))
+    except Exception as e:
+        print(e)
+        return
     document = {}
     for index, topics in enumerate(trending_topics):
         print(topics.text)
@@ -77,6 +81,7 @@ def web_scrape():
     latestdata = handle_mongo(document)
     print("latest")
     print(latestdata)
-    time.sleep(60)
-    # browser.quit()
+    time.sleep(10)
     return latestdata
+
+web_scrape()
