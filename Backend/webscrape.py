@@ -15,6 +15,7 @@ def handle_mongo(data):
     collection = db['trends']
     collection.insert_one(data)
     latest_data = collection.find_one(sort=[("scrape_end_time", -1)], limit=1)
+    latest_data["_id"] = str(latest_data["_id"])
     return latest_data
 
 def rand_proxy():
@@ -76,9 +77,6 @@ def web_scrape():
     latestdata = handle_mongo(document)
     print("latest")
     print(latestdata)
-    time.sleep(150)
+    time.sleep(60)
     # browser.quit()
     return latestdata
-
-if __name__ == '__main__':
-    web_scrape()  
